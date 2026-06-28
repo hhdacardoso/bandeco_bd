@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 // define qual tipo "vence" quando há mais de um
                 $prioridade = ["admin", "nutricionista", "servidor", "aluno"];
                 $tipos_do_usuario = array_map(
-                    fn($l) => strtolower($l["Nome_Tipo_Usuario"]),
+                    fn($l) => strtolower(trim($l["nome_tipo_usuario"] ?? $l["Nome_Tipo_Usuario"])),
                     $linhas
                 );
 
@@ -52,28 +52,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $usuario = $linhas[0]; // dados básicos são iguais em todas as linhas
 
                 // grava dados na sessão
-                $_SESSION["carteirinha"] = $usuario["Num_Carteirinha"];
-                $_SESSION["nome"]        = $usuario["Nome_Usuario"];
-                $_SESSION["saldo"]       = $usuario["Saldo"];
+                $_SESSION["carteirinha"] = $usuario["num_carteirinha"] ?? $usuario["Num_Carteirinha"];
+                $_SESSION["nome"]        = $usuario["nome_usuario"] ?? $usuario["Nome_Usuario"];
+                $_SESSION["saldo"]       = $usuario["saldo"] ?? $usuario["Saldo"];
                 $_SESSION["tipo"]        = $tipo_escolhido;
                 $_SESSION["tipos"]       = $tipos_do_usuario; // guarda todos, caso precise depois
 
-                // redireciona conforme o tipo de usuário (maior privilégio)
-                switch ($tipo_escolhido) {
-                    case "aluno":
-                        header("Location: painel_aluno.php");
-                        break;
-                    case "servidor":
-                        header("Location: painel_servidor.php");
-                        break;
-                    case "nutricionista":
-                        header("Location: painel_nutricionista.php");
-                        break;
-                    case "admin":
-                        header("Location: painel_admin.php");
-                        break;
-                    default:
-                        header("Location: painel.php");
+                // Se o usuário tem mais de um tipo cadastrado, manda para a tela de escolha
+                if (count($tipos_do_usuario) > 1) {
+                    header("Location: selecionar_perfil.php");
+                } else {
+                    // Se só tem um, vai direto (usa o único tipo do array)
+                    $tipo_unico = $tipos_do_usuario[0];
+                    $_SESSION["tipo"] = $tipo_unico; // Define o tipo ativo na sessão
+
+                    switch ($tipo_unico) {
+                        case "aluno": header("Location: painel_aluno.php"); break;
+                        case "servidor": header("Location: painel_servidor.php"); break;
+                        case "nutricionista": header("Location: painel_nutricionista.php"); break;
+                        case "admin": header("Location: painel_admin.php"); break;
+                        default: header("Location: login.php");
+                    }
                 }
                 exit;
             }
@@ -129,13 +128,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         width: 100%;
         padding: 0.7rem;
         font-size: 1rem;
-        background: #2e7d32;
+        background: #2e437d;
         color: #fff;
         border: none;
         border-radius: 6px;
         cursor: pointer;
     }
-    button:hover { background: #27692a; }
+    button:hover { background: #2e437d; }
     .erro {
         background: #fdecea;
         color: #b3261e;

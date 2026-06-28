@@ -1,0 +1,1 @@
+<?php include("painel_aluno.php"); ?>
